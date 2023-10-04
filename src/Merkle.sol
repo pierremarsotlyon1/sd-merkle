@@ -3,14 +3,15 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "./Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Owned} from "solmate/auth/Owned.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
+import {MerkleProofLib} from "solmate/utils/MerkleProofLib.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
 
-
-contract Merkle is Ownable {
-  using SafeERC20 for IERC20;
+contract Merkle is Owned {
+  using FixedPointMathLib for uint256;
+  using SafeTransferLib for ERC20;
 
   struct claimParam {
       address token;
@@ -46,10 +47,10 @@ contract Merkle is Ownable {
 
     // Verify the merkle proof.
     bytes32 node = keccak256(abi.encodePacked(index, account, amount));
-    require(MerkleProof.verify(merkleProof, merkleRoot[token], node), 'Invalid proof.');
+    require(MerkleProofLib.verify(merkleProof, merkleRoot[token], node), 'Invalid proof.');
 
     _setClaimed(token, index);
-    IERC20(token).safeTransfer(account, amount);
+    ERC20(token).safeTransfer(account, amount);
 
     emit Claimed(token, index, amount, account, update[token]);
   }
@@ -61,7 +62,6 @@ contract Merkle is Ownable {
   }
 
   // MULTI SIG FUNCTIONS //
-
   function updateMerkleRoot(address token, bytes32 _merkleRoot) public onlyOwner {
 
     // Increment the update (simulates the clearing of the claimedBitMap)
