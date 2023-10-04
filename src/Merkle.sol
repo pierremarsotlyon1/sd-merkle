@@ -62,7 +62,31 @@ contract Merkle is Owned {
   }
 
   // MULTI SIG FUNCTIONS //
+  function freeze(address token) public onlyOwner {
+    require(merkleRoot[token] != 0, "Already frozen");
+
+    // Increment the update (simulates the clearing of the claimedBitMap)
+    update[token] += 1;
+
+    // Set the new merkle root
+    merkleRoot[token] = 0;
+
+    emit Frozen(token, update[token]);
+  }
+
+  function multiFreeze(address[] calldata tokens) public onlyOwner {
+    uint256 length = tokens.length;
+    uint256 i = 0;
+    for(; i < length; ) {
+      freeze(tokens[i]);
+      unchecked {
+        ++i;
+      }
+    }
+  }
+
   function updateMerkleRoot(address token, bytes32 _merkleRoot) public onlyOwner {
+    require(merkleRoot[token] == 0, "Not frozen");
 
     // Increment the update (simulates the clearing of the claimedBitMap)
     update[token] += 1;
@@ -72,7 +96,22 @@ contract Merkle is Owned {
     emit MerkleRootUpdated(token, _merkleRoot, update[token]);
   }
 
+  function multiUpdateMerkleRoot(address[] calldata tokens, bytes32[] calldata _merkleRoots) public onlyOwner {
+    require(tokens.length == _merkleRoots.length, "!Length");
+
+    uint256 length = tokens.length;
+    uint256 i = 0;
+
+    for(; i < length; ) {
+      updateMerkleRoot(tokens[i], _merkleRoots[i]);
+      unchecked {
+        ++i;
+      }
+    }
+  }
+
   // EVENTS //
   event Claimed(address indexed token, uint256 index, uint256 amount, address indexed account, uint256 indexed update);
   event MerkleRootUpdated(address indexed token, bytes32 indexed merkleRoot, uint256 indexed update);
+  event Frozen(address indexed token, uint256 indexed update);
 }
