@@ -65,9 +65,6 @@ contract Merkle is Owned {
   function freeze(address token) public onlyOwner {
     require(merkleRoot[token] != 0, "Already frozen");
 
-    // Increment the update (simulates the clearing of the claimedBitMap)
-    update[token] += 1;
-
     // Set the new merkle root
     merkleRoot[token] = 0;
 
