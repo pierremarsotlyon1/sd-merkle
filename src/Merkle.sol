@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Merkle Stash
-
 pragma solidity ^0.8.0;
 
 import {Owned} from "solmate/auth/Owned.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
 import {MerkleProofLib} from "solmate/utils/MerkleProofLib.sol";
-import {ERC20} from "solmate/tokens/ERC20.sol";
 
 contract Merkle is Owned {
   using FixedPointMathLib for uint256;
@@ -20,12 +18,15 @@ contract Merkle is Owned {
       bytes32[] merkleProof;
   }
 
+
   // environment variables for updateable merkle
   mapping(address => bytes32) public merkleRoot;
   mapping(address => uint256) public update;
 
   // This is a packed array of booleans.
   mapping(address => mapping(uint256 => mapping(uint256 => uint256))) private claimedBitMap;
+
+  constructor(address _owner) Owned(_owner){}
 
   function isClaimed(address token, uint256 index) public view returns (bool) {
     uint256 claimedWordIndex = index / 256;
